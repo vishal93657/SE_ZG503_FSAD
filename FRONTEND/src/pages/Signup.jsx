@@ -1,7 +1,21 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import './Auth.css'
+import {
+  Container,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Alert,
+  Box,
+  Link as MuiLink,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+} from '@mui/material'
+import { School as SchoolIcon } from '@mui/icons-material'
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -45,76 +59,97 @@ const Signup = () => {
   }
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h1>Sign Up</h1>
-        <p className="auth-subtitle">Create a new account</p>
+    <Container maxWidth="sm" sx={{ py: 8 }}>
+      <Paper elevation={3} sx={{ p: 4 }}>
+        <Box textAlign="center" mb={3}>
+          <SchoolIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+          <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+            Sign Up
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Create a new account
+          </Typography>
+        </Box>
         
-        {error && <div className="alert alert-error">{error}</div>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
         
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Username</label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              placeholder="Enter your username"
-            />
-          </div>
+          <TextField
+            fullWidth
+            label="Username"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+            placeholder="Enter your username"
+            sx={{ mb: 2 }}
+          />
           
-          <div className="form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              placeholder="Enter your email"
-            />
-          </div>
+          <TextField
+            fullWidth
+            label="Email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            placeholder="Enter your email"
+            sx={{ mb: 2 }}
+          />
           
-          <div className="form-group">
-            <label>Role</label>
-            <select
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Role</InputLabel>
+            <Select
               name="role"
               value={formData.role}
               onChange={handleChange}
+              label="Role"
               required
             >
-              <option value="student">Student</option>
-              <option value="staff">Staff</option>
-            </select>
-          </div>
+              <MenuItem value="student">Student</MenuItem>
+              <MenuItem value="teacher">Teacher</MenuItem>
+            </Select>
+          </FormControl>
           
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              minLength={6}
-              placeholder="Enter your password"
-            />
-          </div>
+          <TextField
+            fullWidth
+            label="Password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            inputProps={{ minLength: 6 }}
+            placeholder="Enter your password"
+            sx={{ mb: 3 }}
+          />
           
-          <button type="submit" className="btn btn-primary btn-block">
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            size="large"
+            sx={{ mb: 2 }}
+          >
             Sign Up
-          </button>
+          </Button>
         </form>
         
-        <p className="auth-footer">
-          Already have an account? <Link to="/login">Login</Link>
-        </p>
-      </div>
-    </div>
+        <Box textAlign="center">
+          <Typography variant="body2" color="text.secondary">
+            Already have an account?{' '}
+            <MuiLink component={Link} to="/login" underline="hover">
+              Login
+            </MuiLink>
+          </Typography>
+        </Box>
+      </Paper>
+    </Container>
   )
 }
 
 export default Signup
-

@@ -2,7 +2,27 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useEquipment } from '../context/EquipmentContext'
 import { Link } from 'react-router-dom'
-import './Dashboard.css'
+import {
+  Container,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Divider,
+} from '@mui/material'
+import {
+  Inventory as InventoryIcon,
+  CheckCircle as CheckCircleIcon,
+  Pending as PendingIcon,
+  Assignment as AssignmentIcon,
+  Search as SearchIcon,
+  Settings as SettingsIcon,
+  ListAlt as ListAltIcon,
+} from '@mui/icons-material'
 
 const Dashboard = () => {
   const { user, fetchUserProfile } = useAuth()
@@ -34,102 +54,188 @@ const Dashboard = () => {
   const displayRole = userRole || user?.role || 'N/A'
   const formattedRole = displayRole.replace('_', ' ').toUpperCase()
   
-  // Check if user is admin or lab_assistant
   const isAdminOrLabAssistant = displayRole === 'admin' || displayRole === 'lab_assistant' || 
                                  user?.role === 'admin' || user?.role === 'lab_assistant'
   
-  // For admins and lab assistants, show all requests. For others, show only their own
   const userRequests = isAdminOrLabAssistant 
     ? requests 
     : requests.filter(req => req.userId === user?.id)
   const pendingRequests = userRequests.filter(req => req.status === 'pending')
   const approvedRequests = userRequests.filter(req => req.status === 'approved')
 
+  const StatCard = ({ icon: Icon, value, label, color = 'primary' }) => (
+    <Card elevation={2} sx={{ height: '100%' }}>
+      <CardContent>
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box>
+            <Typography variant="h4" fontWeight="bold" color={`${color}.main`}>
+              {value}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mt={1}>
+              {label}
+            </Typography>
+          </Box>
+          <Icon sx={{ fontSize: 48, color: `${color}.main`, opacity: 0.3 }} />
+        </Box>
+      </CardContent>
+    </Card>
+  )
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'approved': return 'success'
+      case 'pending': return 'warning'
+      case 'rejected': return 'error'
+      default: return 'default'
+    }
+  }
+
   return (
-    <div className="container">
-      <div className="dashboard-header">
-        <h1>Welcome, {user?.username || user?.name}!</h1>
-        <p className="dashboard-subtitle">
-          Role: {loadingRole ? 'Loading...' : formattedRole}
-        </p>
-      </div>
-
-      <div className="dashboard-stats grid grid-4">
-        <div className="stat-card">
-          <div className="stat-icon">📦</div>
-          <div className="stat-value">{equipment.length}</div>
-          <div className="stat-label">Total Equipment</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">✅</div>
-          <div className="stat-value">{availableEquipment}</div>
-          <div className="stat-label">Available</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">⏳</div>
-          <div className="stat-value">{pendingRequests.length}</div>
-          <div className="stat-label">{isAdminOrLabAssistant ? 'Pending Requests' : 'My Pending Requests'}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">✓</div>
-          <div className="stat-value">{approvedRequests.length}</div>
-          <div className="stat-label">{isAdminOrLabAssistant ? 'Active Borrows' : 'My Active Borrows'}</div>
-        </div>
-      </div>
-
-      <div className="grid grid-2">
-        <div className="card">
-          <h2>Quick Actions</h2>
-          <div className="quick-actions">
-            <Link to="/equipment" className="action-btn">
-              <span className="action-icon">🔍</span>
-              <span>Browse Equipment</span>
-            </Link>
-            {(userRole === 'admin' || user?.role === 'admin') && (
-              <Link to="/equipment/manage" className="action-btn">
-                <span className="action-icon">⚙️</span>
-                <span>Manage Equipment</span>
-              </Link>
-            )}
-            {(userRole === 'admin' || userRole === 'lab_assistant' || 
-              user?.role === 'admin' || user?.role === 'lab_assistant') && (
-              <Link to="/requests" className="action-btn">
-                <span className="action-icon">📋</span>
-                <span>Review Requests</span>
-              </Link>
-            )}
-          </div>
-        </div>
-
-        <div className="card">
-          <h2>My Recent Requests</h2>
-          {userRequests.length === 0 ? (
-            <p className="empty-state">No requests yet. Start by browsing equipment!</p>
+    <Container maxWidth="lg" sx={{py:4}}>
+      <Box mb={4}>
+        <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+          Welcome, {user?.username || user?.name}!
+        </Typography>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Typography variant="body1" color="text.secondary" fontWeight="bold">
+            Role:
+          </Typography>
+          {loadingRole ? (
+            <CircularProgress size={16} />
           ) : (
-            <div className="request-list">
-              {userRequests.slice(0, 5).map(request => {
-                const equipmentItem = equipment.find(eq => eq.id === request.equipmentId)
-                return (
-                  <div key={request.id} className="request-item">
-                    <div className="request-info">
-                      <strong>{equipmentItem?.name || 'Unknown'}</strong>
-                      <span className={`badge badge-${request.status === 'approved' ? 'success' : request.status === 'pending' ? 'warning' : 'danger'}`}>
-                        {request.status}
-                      </span>
-                    </div>
-                    <div className="request-dates">
-                      {new Date(request.startDate).toLocaleDateString()} - {new Date(request.endDate).toLocaleDateString()}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+            <Chip label={formattedRole} size="small" color="primary" variant="outlined" />
           )}
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+
+      <Grid container spacing={4} mb={4}>
+        <Grid item xs={12} sm={6} md={6} sx={{minWidth:220}}>
+          <StatCard
+            icon={InventoryIcon}
+            value={equipment.length}
+            label="Total Equipment"
+            color="primary"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={6} sx={{minWidth:220}}>
+          <StatCard
+            icon={CheckCircleIcon}
+            value={availableEquipment}
+            label="Available"
+            color="success"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={6} sx={{minWidth:220}}>
+          <StatCard
+            icon={PendingIcon}
+            value={pendingRequests.length}
+            label={isAdminOrLabAssistant ? 'Pending Requests' : 'My Pending Requests'}
+            color="warning"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={6} sx={{minWidth:220}}>
+          <StatCard
+            icon={AssignmentIcon}
+            value={approvedRequests.length}
+            label={isAdminOrLabAssistant ? 'Active Borrows' : 'My Active Borrows'}
+            color="info"
+          />
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6} sx={{minWidth:320}}>
+          <Card elevation={2}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                Quick Actions
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              <Box display="flex" flexDirection="column" gap={2}>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  component={Link}
+                  to="/equipment"
+                  startIcon={<SearchIcon />}
+                  size="large"
+                >
+                  Browse Equipment
+                </Button>
+                {(userRole === 'admin' || user?.role === 'admin') && (
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    component={Link}
+                    to="/equipment/manage"
+                    startIcon={<SettingsIcon />}
+                    size="large"
+                  >
+                    Manage Equipment
+                  </Button>
+                )}
+                {(userRole === 'admin' || userRole === 'lab_assistant' || 
+                  user?.role === 'admin' || user?.role === 'lab_assistant') && (
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    component={Link}
+                    to="/requests"
+                    startIcon={<ListAltIcon />}
+                    size="large"
+                  >
+                    Review Requests
+                  </Button>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={6} sx={{minWidth:520}}>
+          <Card elevation={2}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                My Recent Requests
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              {userRequests.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" textAlign="center" py={3}>
+                  No requests yet. Start by browsing equipment!
+                </Typography>
+              ) : (
+                <Box>
+                  {userRequests.slice(0, 5).map((request, index) => {
+                    const equipmentItem = equipment.find(eq => eq.id === request.equipmentId)
+                    return (
+                      <Box key={request.id}>
+                        <Box display="flex" justifyContent="space-between" alignItems="center" py={1.5}>
+                          <Box>
+                            <Typography variant="body1" fontWeight="medium">
+                              {equipmentItem?.name || 'Unknown'}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {new Date(request.startDate || request.borrow_date).toLocaleDateString()} - {new Date(request.endDate || request.return_date).toLocaleDateString()}
+                            </Typography>
+                          </Box>
+                          <Chip
+                            label={request.status}
+                            size="small"
+                            color={getStatusColor(request.status)}
+                          />
+                        </Box>
+                        {index < userRequests.slice(0, 5).length - 1 && <Divider />}
+                      </Box>
+                    )
+                  })}
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Container>
   )
 }
 
 export default Dashboard
-

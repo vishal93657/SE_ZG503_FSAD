@@ -10,7 +10,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* Background will be set by Material UI theme */
   min-height: 100vh;
 }
 
@@ -21,6 +21,7 @@ code {
 
 #root {
   min-height: 100vh;
+  /* Background will be set by Material UI theme */
 }
 
 

@@ -1,243 +1,280 @@
-import { useState } from 'react'
-import { useEquipment } from '../context/EquipmentContext'
-import './Requests.css'
+import { useState } from "react";
+import { useEquipment } from "../context/EquipmentContext";
+import {
+  Container,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+  Chip,
+  Box,
+  Alert,
+  CircularProgress,
+  Divider,
+  Paper,
+} from "@mui/material";
+import {
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
+  AssignmentReturn as AssignmentReturnIcon,
+} from "@mui/icons-material";
 
 const Requests = () => {
-  const { requests, updateRequest, equipment } = useEquipment()
-  const [error, setError] = useState('')
-  const [loadingRequestId, setLoadingRequestId] = useState(null)
+  const { requests, updateRequest, equipment } = useEquipment();
+  const [error, setError] = useState("");
+  const [loadingRequestId, setLoadingRequestId] = useState(null);
 
   const handleApprove = async (requestId) => {
     try {
-      setError('')
-      setLoadingRequestId(requestId)
-      await updateRequest(requestId, { status: 'approved' })
+      setError("");
+      setLoadingRequestId(requestId);
+      await updateRequest(requestId, { status: "approved" });
     } catch (err) {
-      setError(err.message || 'Failed to approve request')
-      console.error('Error approving request:', err)
+      setError(err.message || "Failed to approve request");
+      console.error("Error approving request:", err);
     } finally {
-      setLoadingRequestId(null)
+      setLoadingRequestId(null);
     }
-  }
+  };
 
   const handleReject = async (requestId) => {
     try {
-      setError('')
-      setLoadingRequestId(requestId)
-      await updateRequest(requestId, { status: 'rejected' })
+      setError("");
+      setLoadingRequestId(requestId);
+      await updateRequest(requestId, { status: "rejected" });
     } catch (err) {
-      setError(err.message || 'Failed to reject request')
-      console.error('Error rejecting request:', err)
+      setError(err.message || "Failed to reject request");
+      console.error("Error rejecting request:", err);
     } finally {
-      setLoadingRequestId(null)
+      setLoadingRequestId(null);
     }
-  }
+  };
 
   const handleReturn = async (requestId) => {
     try {
-      setError('')
-      setLoadingRequestId(requestId)
-      await updateRequest(requestId, { status: 'returned' })
+      setError("");
+      setLoadingRequestId(requestId);
+      await updateRequest(requestId, { status: "returned" });
     } catch (err) {
-      setError(err.message || 'Failed to mark as returned')
-      console.error('Error marking as returned:', err)
+      setError(err.message || "Failed to mark as returned");
+      console.error("Error marking as returned:", err);
     } finally {
-      setLoadingRequestId(null)
+      setLoadingRequestId(null);
     }
-  }
+  };
 
-  const getStatusBadge = (status) => {
-    const badges = {
-      pending: 'badge-warning',
-      approved: 'badge-success',
-      rejected: 'badge-danger',
-      returned: 'badge-info'
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "pending":
+        return "warning";
+      case "approved":
+        return "success";
+      case "rejected":
+        return "error";
+      case "returned":
+        return "info";
+      default:
+        return "default";
     }
-    return badges[status] || 'badge-info'
-  }
+  };
 
-  const sortedRequests = [...requests].sort((a, b) => 
-    new Date(b.createdAt || b.borrow_date || 0) - new Date(a.createdAt || a.borrow_date || 0)
-  )
+  const sortedRequests = [...requests].sort(
+    (a, b) =>
+      new Date(b.createdAt || b.borrow_date || 0) -
+      new Date(a.createdAt || a.borrow_date || 0)
+  );
 
-  const pendingRequests = sortedRequests.filter(req => req.status === 'pending')
-  const otherRequests = sortedRequests.filter(req => req.status !== 'pending')
+  const pendingRequests = sortedRequests.filter(
+    (req) => req.status === "pending"
+  );
+  const otherRequests = sortedRequests.filter(
+    (req) => req.status !== "pending"
+  );
+
+  const RequestCard = ({ request }) => {
+    const equipmentItem = equipment.find((eq) => eq.id === request.equipmentId);
+    const isLoading = loadingRequestId === request.id;
+
+    return (
+      <Card
+        elevation={2}
+        sx={{ height: "100%", display: "flex", flexDirection: "column" }}
+      >
+        <CardContent sx={{ flexGrow: 1 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="flex-start"
+            mb={2}
+          >
+            <Box>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                {equipmentItem?.name ||
+                  request.equipmentName ||
+                  "Unknown Equipment"}
+              </Typography>
+            </Box>
+            <Chip
+              label={request.status}
+              color={getStatusColor(request.status)}
+              size="small"
+            />
+          </Box>
+
+          <Divider sx={{ my: 2 }} />
+
+          <Box>
+            <Typography variant="body2" gutterBottom>
+              <strong>Category:</strong> {equipmentItem?.category || "N/A"}
+            </Typography>
+            <Typography variant="body2" gutterBottom>
+              <strong>Quantity:</strong> {request.quantity || 1}
+            </Typography>
+            <Typography variant="body2" gutterBottom>
+              <strong>Borrow Date:</strong>{" "}
+              {request.startDate || request.borrow_date
+                ? new Date(
+                    request.startDate || request.borrow_date
+                  ).toLocaleDateString()
+                : "N/A"}
+            </Typography>
+            <Typography variant="body2" gutterBottom>
+              <strong>Return Date:</strong>{" "}
+              {request.endDate || request.return_date
+                ? new Date(
+                    request.endDate || request.return_date
+                  ).toLocaleDateString()
+                : "N/A"}
+            </Typography>
+            {request.purpose && (
+              <Typography variant="body2" gutterBottom>
+                <strong>Purpose:</strong> {request.purpose}
+              </Typography>
+            )}
+            {(request.createdAt || request.borrow_date) && (
+              <Typography variant="body2" color="text.secondary">
+                <strong>Requested:</strong>{" "}
+                {new Date(
+                  request.createdAt || request.borrow_date
+                ).toLocaleString()}
+              </Typography>
+            )}
+          </Box>
+        </CardContent>
+
+        {request.status === "pending" && (
+          <CardActions sx={{ justifyContent: "flex-end", p: 2 }}>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={
+                isLoading ? <CircularProgress size={16} /> : <CheckCircleIcon />
+              }
+              onClick={() => handleApprove(request.id)}
+              disabled={isLoading}
+              size="small"
+            >
+              Approve
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              startIcon={
+                isLoading ? <CircularProgress size={16} /> : <CancelIcon />
+              }
+              onClick={() => handleReject(request.id)}
+              disabled={isLoading}
+              size="small"
+            >
+              Reject
+            </Button>
+          </CardActions>
+        )}
+
+        {request.status === "approved" && (
+          <CardActions sx={{ justifyContent: "flex-end", p: 2 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={
+                isLoading ? (
+                  <CircularProgress size={16} />
+                ) : (
+                  <AssignmentReturnIcon />
+                )
+              }
+              onClick={() => handleReturn(request.id)}
+              disabled={isLoading}
+              size="small"
+            >
+              Mark as Returned
+            </Button>
+          </CardActions>
+        )}
+      </Card>
+    );
+  };
 
   return (
-    <div className="container">
-      <div className="requests-header">
-        <h1>Borrowing Requests</h1>
-        <p>Review and manage equipment borrowing requests</p>
-      </div>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box mb={4}>
+        <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+          Borrowing Requests
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Review and manage equipment borrowing requests
+        </Typography>
+      </Box>
 
       {error && (
-        <div className="alert alert-error" style={{ marginBottom: '1rem' }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
           {error}
-        </div>
+        </Alert>
       )}
 
       {requests.length === 0 ? (
-        <div className="card empty-state">
-          <p>No requests found.</p>
-        </div>
+        <Paper sx={{ p: 4, textAlign: "center" }}>
+          <Typography variant="body1" color="text.secondary">
+            No requests found.
+          </Typography>
+        </Paper>
       ) : (
         <>
           {pendingRequests.length > 0 && (
-            <div className="requests-section">
-              <h2>Pending Requests ({pendingRequests.length})</h2>
-              <div className="requests-grid">
-                {pendingRequests.map(request => {
-                  const equipmentItem = equipment.find(eq => eq.id === request.equipmentId)
-                  return (
-                    <div key={request.id} className="request-card card">
-                      <div className="request-card-header">
-                        <div>
-                          <h3>{equipmentItem?.name || request.equipmentName || 'Unknown Equipment'}</h3>
-                          <p className="request-user">Requested by: {request.userName || `User ID: ${request.userId}`}</p>
-                        </div>
-                        <span className={`badge ${getStatusBadge(request.status)}`}>
-                          {request.status}
-                        </span>
-                      </div>
-                      
-                      <div className="request-details">
-                        <div className="detail-row">
-                          <span className="detail-label">Category:</span>
-                          <span className="detail-value">{equipmentItem?.category || 'N/A'}</span>
-                        </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Quantity:</span>
-                          <span className="detail-value">{request.quantity || 1}</span>
-                        </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Borrow Date:</span>
-                          <span className="detail-value">
-                            {request.startDate || request.borrow_date 
-                              ? new Date(request.startDate || request.borrow_date).toLocaleDateString()
-                              : 'N/A'}
-                          </span>
-                        </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Return Date:</span>
-                          <span className="detail-value">
-                            {request.endDate || request.return_date
-                              ? new Date(request.endDate || request.return_date).toLocaleDateString()
-                              : 'N/A'}
-                          </span>
-                        </div>
-                        {request.purpose && (
-                          <div className="detail-row">
-                            <span className="detail-label">Purpose:</span>
-                            <span className="detail-value">{request.purpose}</span>
-                          </div>
-                        )}
-                        {(request.createdAt || request.borrow_date) && (
-                          <div className="detail-row">
-                            <span className="detail-label">Requested:</span>
-                            <span className="detail-value">
-                              {new Date(request.createdAt || request.borrow_date).toLocaleString()}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="request-actions">
-                        <button
-                          className="btn btn-success"
-                          onClick={() => handleApprove(request.id)}
-                          disabled={loadingRequestId === request.id}
-                        >
-                          {loadingRequestId === request.id ? 'Processing...' : 'Approve'}
-                        </button>
-                        <button
-                          className="btn btn-danger"
-                          onClick={() => handleReject(request.id)}
-                          disabled={loadingRequestId === request.id}
-                        >
-                          {loadingRequestId === request.id ? 'Processing...' : 'Reject'}
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
+            <Box mb={4}>
+              <Typography variant="h5" gutterBottom fontWeight="bold" mb={2}>
+                Pending Requests ({pendingRequests.length})
+              </Typography>
+              <Grid container spacing={3}>
+                {pendingRequests.map((request) => (
+                  <Grid item xs={12} md={6} key={request.id}>
+                    <RequestCard request={request} />
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
           )}
 
           {otherRequests.length > 0 && (
-            <div className="requests-section">
-              <h2>All Requests ({otherRequests.length})</h2>
-              <div className="requests-grid">
-                {otherRequests.map(request => {
-                  const equipmentItem = equipment.find(eq => eq.id === request.equipmentId)
-                  return (
-                    <div key={request.id} className="request-card card">
-                      <div className="request-card-header">
-                        <div>
-                          <h3>{equipmentItem?.name || request.equipmentName || 'Unknown Equipment'}</h3>
-                          <p className="request-user">Requested by: {request.userName || `User ID: ${request.userId}`}</p>
-                        </div>
-                        <span className={`badge ${getStatusBadge(request.status)}`}>
-                          {request.status}
-                        </span>
-                      </div>
-                      
-                      <div className="request-details">
-                        <div className="detail-row">
-                          <span className="detail-label">Category:</span>
-                          <span className="detail-value">{equipmentItem?.category || 'N/A'}</span>
-                        </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Quantity:</span>
-                          <span className="detail-value">{request.quantity || 1}</span>
-                        </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Borrow Date:</span>
-                          <span className="detail-value">
-                            {request.startDate || request.borrow_date 
-                              ? new Date(request.startDate || request.borrow_date).toLocaleDateString()
-                              : 'N/A'}
-                          </span>
-                        </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Return Date:</span>
-                          <span className="detail-value">
-                            {request.endDate || request.return_date
-                              ? new Date(request.endDate || request.return_date).toLocaleDateString()
-                              : 'N/A'}
-                          </span>
-                        </div>
-                        {request.purpose && (
-                          <div className="detail-row">
-                            <span className="detail-label">Purpose:</span>
-                            <span className="detail-value">{request.purpose}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {request.status === 'approved' && (
-                        <div className="request-actions">
-                          <button
-                            className="btn btn-primary"
-                            onClick={() => handleReturn(request.id)}
-                            disabled={loadingRequestId === request.id}
-                          >
-                            {loadingRequestId === request.id ? 'Processing...' : 'Mark as Returned'}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
+            <Box>
+              <Typography variant="h5" gutterBottom fontWeight="bold" mb={2}>
+                All Requests ({otherRequests.length})
+              </Typography>
+              <Grid container spacing={3}>
+                {otherRequests.map((request) => (
+                  <Grid item xs={12} md={6} key={request.id}>
+                    <RequestCard request={request} />
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
           )}
         </>
       )}
-    </div>
-  )
-}
+    </Container>
+  );
+};
 
-export default Requests
-
-
+export default Requests;

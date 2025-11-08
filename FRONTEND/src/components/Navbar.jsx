@@ -1,45 +1,141 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import './Navbar.css'
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  Chip,
+  IconButton,
+  Menu,
+  MenuItem,
+} from '@mui/material'
+import {
+  Dashboard as DashboardIcon,
+  Inventory as InventoryIcon,
+  Settings as SettingsIcon,
+  AccountCircle,
+  Logout,
+  School as SchoolIcon,
+  NotificationImportant,
+} from '@mui/icons-material'
+import { useState } from 'react'
 
 const Navbar = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [anchorEl, setAnchorEl] = useState(null)
 
   const handleLogout = () => {
+    handleMenuClose()
     logout()
     navigate('/login')
   }
 
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleMenuClose = () => {
+    setAnchorEl(null)
+  }
+
   return (
-    <nav className="navbar">
-      <div className="navbar-container">
-        <Link to="/dashboard" className="navbar-brand">
-          🏫 School Equipment Lending Portal
-        </Link>
+    <AppBar position="static" elevation={2}>
+      <Toolbar>
+        <SchoolIcon sx={{ mr: 2 }} />
+        <Typography
+          variant="h6"
+          component={Link}
+          to="/dashboard"
+          sx={{
+            flexGrow: 0,
+            textDecoration: 'none',
+            color: 'inherit',
+            fontWeight: 'bold',
+          }}
+        >
+          SCHOOL EQUIPMENT LENDING PORTAL
+        </Typography>
+        
         {user && (
-          <div className="navbar-menu">
-            <Link to="/dashboard" className="navbar-link">Dashboard</Link>
-            <Link to="/equipment" className="navbar-link">Equipment</Link>
-            {user.role === 'admin' && (
-              <Link to="/equipment/manage" className="navbar-link">Manage Equipment</Link>
-            )}
-            {(user.role === 'admin' || user.role === 'lab_assistant') && (
-              <Link to="/requests" className="navbar-link">Requests</Link>
-            )}
-            <div className="navbar-user">
-              <span className="navbar-user-name">{user.username || user.name}</span>
-              <span className="navbar-user-role">({user.role})</span>
-              <button onClick={handleLogout} className="btn btn-secondary btn-sm">
-                Logout
-              </button>
-            </div>
-          </div>
+          <>
+            <Box sx={{ flexGrow: 1, display: 'flex', gap: 1, ml: 3 }}>
+              <Button
+                color="inherit"
+                component={Link}
+                to="/dashboard"
+                startIcon={<DashboardIcon />}
+              >
+                Dashboard
+              </Button>
+              <Button
+                color="inherit"
+                component={Link}
+                to="/equipment"
+                startIcon={<InventoryIcon />}
+              >
+                Equipment
+              </Button>
+              {user.role === 'admin' && (
+                <Button
+                  color="inherit"
+                  component={Link}
+                  to="/equipment/manage"
+                  startIcon={<SettingsIcon />}
+                >
+                  Manage
+                </Button>
+              )}
+              {(user.role === 'admin' || user.role === 'lab_assistant') && (
+                <Button
+                  color="inherit"
+                  component={Link}
+                  to="/requests"
+                  startIcon={<NotificationImportant />}
+                >
+                  Requests
+                </Button>
+              )}
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Chip
+                label={user.username?.replace('_', ' ').toUpperCase() || 'USER'}
+                size="small"
+                color="secondary"
+                variant="outlined"
+                sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.5)' }}
+              />
+              <IconButton
+                color="inherit"
+                onClick={handleMenuOpen}
+                aria-label="account menu"
+              >
+                <AccountCircle />
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+              >
+                <MenuItem disabled>
+                  <Typography variant="body2">
+                    {user.username || user.name}
+                  </Typography>
+                </MenuItem>
+                <MenuItem onClick={handleLogout}>
+                  <Logout sx={{ mr: 1 }} fontSize="small" />
+                  Logout
+                </MenuItem>
+              </Menu>
+            </Box>
+          </>
         )}
-      </div>
-    </nav>
+      </Toolbar>
+    </AppBar>
   )
 }
 
 export default Navbar
-

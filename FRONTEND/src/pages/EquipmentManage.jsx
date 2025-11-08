@@ -13,9 +13,12 @@ const EquipmentManage = () => {
     setShowForm(true)
   }
 
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this equipment?')) {
-      deleteEquipment(id)
+  const handleDelete = async(id) => {
+    try {
+      await deleteEquipment(id)
+    } catch (error) {
+      console.error('VISHAL', error);
+      alert('Failed to delete equipment:', `${error.detail}`)
     }
   }
 
@@ -49,7 +52,7 @@ const EquipmentManage = () => {
       <div className="equipment-table-container card">
         <h2>All Equipment</h2>
         {equipment.length === 0 ? (
-          <p className="empty-state">No equipment added yet. Click "Add New Equipment" to get started.</p>
+          <p className="empty-state">No equipment added yet.</p>
         ) : (
           <div className="table-responsive">
             <table className="equipment-table">

@@ -34,7 +34,7 @@ export const EquipmentProvider = ({ children }) => {
         ...item,
         available: item.available_quantity !== undefined ? item.available_quantity : item.available || 0
       }))
-      
+
       setEquipment(mappedEquipment)
     } catch (err) {
       console.error('Error fetching equipment:', err)
@@ -67,12 +67,11 @@ export const EquipmentProvider = ({ children }) => {
         startDate: item.borrow_date,
         endDate: item.return_date,
         return_date: item.return_date,
-        // Map 'accepted' from API to 'approved' for frontend consistency
         status: item.status === 'accepted' ? 'approved' : item.status,
         borrow_date: item.borrow_date,
         createdAt: item.borrow_date || new Date().toISOString()
       }))
-      
+
       setRequests(mappedRequests)
       localStorage.setItem('requests', JSON.stringify(mappedRequests))
     } catch (err) {
@@ -102,7 +101,7 @@ export const EquipmentProvider = ({ children }) => {
     }
 
     window.addEventListener('tokenSet', handleTokenSet)
-    
+
     return () => {
       window.removeEventListener('tokenSet', handleTokenSet)
     }
@@ -124,15 +123,15 @@ export const EquipmentProvider = ({ children }) => {
         available: newItem.available_quantity !== undefined ? newItem.available_quantity : newItem.available || newItem.quantity || 0
       }
       setEquipment(prev => [...prev, mappedItem])
-      
+
       return mappedItem
     } catch (err) {
       console.error('Error adding equipment:', err)
-      const errorMessage = err.response?.data?.message || 
-                          err.response?.data?.error || 
-                          err.response?.data?.detail ||
-                          err.message || 
-                          'Failed to add equipment'
+      const errorMessage = err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.response?.data?.detail ||
+        err.message ||
+        'Failed to add equipment'
       throw new Error(errorMessage)
     }
   }
@@ -147,43 +146,53 @@ export const EquipmentProvider = ({ children }) => {
       }
 
       const response = await api.patch(`/equipment/${id}`, payload)
-      
+
       const updatedItem = response.data.data || response.data
       const mappedItem = {
         ...updatedItem,
-        available: updatedItem.available_quantity !== undefined 
-          ? updatedItem.available_quantity 
+        available: updatedItem.available_quantity !== undefined
+          ? updatedItem.available_quantity
           : updatedItem.available !== undefined
-          ? updatedItem.available
-          : updates.available !== undefined
-          ? updates.available
-          : updatedItem.quantity || 0
+            ? updatedItem.available
+            : updates.available !== undefined
+              ? updates.available
+              : updatedItem.quantity || 0
       }
-      
-      // Update local state
-      setEquipment(prev => prev.map(item => 
+
+      setEquipment(prev => prev.map(item =>
         item.id === id ? mappedItem : item
       ))
-      
-      // Refresh equipment list to get latest data from server
+
       await fetchEquipment()
-      
+
       return mappedItem
     } catch (err) {
       console.error('Error updating equipment:', err)
-      const errorMessage = err.response?.data?.message || 
-                          err.response?.data?.error || 
-                          err.response?.data?.detail ||
-                          err.message || 
-                          'Failed to update equipment'
+      const errorMessage = err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.response?.data?.detail ||
+        err.message ||
+        'Failed to update equipment'
       throw new Error(errorMessage)
     }
   }
 
-  const deleteEquipment = (id) => {
-    const updated = equipment.filter(item => item.id !== id)
-    setEquipment(updated)
-    localStorage.setItem('equipment', JSON.stringify(updated))
+  const deleteEquipment = async (id) => {
+    try {
+      await api.delete(`/equipment/${id}`)
+      const updated = equipment.filter(item => item.id !== id)
+      setEquipment(updated)
+      localStorage.setItem('equipment', JSON.stringify(updated))
+    } catch (err) {
+      console.error('Error updating request:', err)
+      const errorMessage = err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.response?.data?.detail ||
+        err.message ||
+        'Failed to update request'
+      throw new Error(errorMessage)
+    }
+    
   }
 
   const createRequest = async (request) => {
@@ -195,12 +204,9 @@ export const EquipmentProvider = ({ children }) => {
       }
 
       const response = await api.post(`/borrow/${request.equipmentId}`, payload)
-      
-      // Refresh requests and equipment list to get updated data
       await fetchRequests()
       await fetchEquipment()
-      
-      // Return the created request data from response or fetch the latest
+
       const newRequest = response.data ? {
         id: response.data.id,
         equipmentId: response.data.equipment_id || request.equipmentId,
@@ -213,39 +219,34 @@ export const EquipmentProvider = ({ children }) => {
         borrow_date: response.data.borrow_date,
         createdAt: response.data.borrow_date || new Date().toISOString()
       } : null
-      
+
       return newRequest
     } catch (err) {
       console.error('Error creating request:', err)
-      const errorMessage = err.response?.data?.message || 
-                          err.response?.data?.error || 
-                          err.response?.data?.detail ||
-                          err.message || 
-                          'Failed to create request'
+      const errorMessage = err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.response?.data?.detail ||
+        err.message ||
+        'Failed to create request'
       throw new Error(errorMessage)
     }
   }
 
   const updateRequest = async (id, updates) => {
     try {
-      // Map 'approved' to 'accepted' for API, but keep 'approved' in frontend
       const apiStatus = updates.status === 'approved' ? 'accepted' : updates.status
-      
       const payload = {
         status: apiStatus
       }
 
       const response = await api.patch(`/loan_requests/${id}`, payload)
-      
-      // Map 'accepted' from API response to 'approved' for frontend consistency
       const responseStatus = response.data?.status === 'accepted' ? 'approved' : response.data?.status
-      
-      // Update local state with the response data
+
       setRequests(prevRequests => {
         const updated = prevRequests.map(req => {
           if (req.id === id) {
-            const updatedReq = { 
-              ...req, 
+            const updatedReq = {
+              ...req,
               ...updates,
               status: responseStatus || updates.status
             }
@@ -265,7 +266,7 @@ export const EquipmentProvider = ({ children }) => {
                 return prevEquipment
               })
             }
-            
+
             return updatedReq
           }
           return req
@@ -273,54 +274,50 @@ export const EquipmentProvider = ({ children }) => {
         localStorage.setItem('requests', JSON.stringify(updated))
         return updated
       })
-      
-      // If marking as returned, also update the equipment
+
       if (updates.status === 'returned') {
         const request = requests.find(req => req.id === id)
         if (request && request.status === 'approved') {
           const equipmentItem = equipment.find(eq => eq.id === request.equipmentId)
           if (equipmentItem) {
             try {
-              // Update equipment when marking as returned
               const equipmentPayload = {
                 name: equipmentItem.name,
                 category: equipmentItem.category,
                 condition: equipmentItem.condition,
                 quantity: equipmentItem.quantity
               }
-              
+
               await api.patch(`/equipment/${request.equipmentId}`, equipmentPayload)
             } catch (err) {
               console.error('Error updating equipment on return:', err)
-              // Don't throw here, as the request update was successful
             }
           }
         }
       }
-      
-      // Refresh requests and equipment to get latest data from server
+
       await fetchRequests()
       await fetchEquipment()
-      
+
     } catch (err) {
       console.error('Error updating request:', err)
-      const errorMessage = err.response?.data?.message || 
-                          err.response?.data?.error || 
-                          err.response?.data?.detail ||
-                          err.message || 
-                          'Failed to update request'
+      const errorMessage = err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.response?.data?.detail ||
+        err.message ||
+        'Failed to update request'
       throw new Error(errorMessage)
     }
   }
 
   const checkAvailability = (equipmentId, startDate, endDate) => {
-    const overlapping = requests.filter(req => 
+    const overlapping = requests.filter(req =>
       req.equipmentId === equipmentId &&
       req.status === 'approved' &&
       new Date(req.startDate) <= new Date(endDate) &&
       new Date(req.endDate) >= new Date(startDate)
     )
-    
+
     const equipmentItem = equipment.find(eq => eq.id === equipmentId)
     if (!equipmentItem) return false
 

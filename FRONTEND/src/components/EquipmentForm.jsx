@@ -1,6 +1,22 @@
 import { useState, useEffect } from 'react'
 import { useEquipment } from '../context/EquipmentContext'
-import './Modal.css'
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Alert,
+  CircularProgress,
+  Box,
+  IconButton,
+} from '@mui/material'
+import { Close as CloseIcon, Height } from '@mui/icons-material'
 
 const EquipmentForm = ({ equipment, onClose }) => {
   const { addEquipment, updateEquipment } = useEquipment()
@@ -78,92 +94,102 @@ const EquipmentForm = ({ equipment, onClose }) => {
   const categories = [
     'Sports',
     'Lab Equipment',
-    'Electronics',
     'Musical Instruments',
-    'Project Materials',
+    'Study Materials',
     'Other'
   ]
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>{equipment ? 'Edit Equipment' : 'Add New Equipment'}</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
-        </div>
+    <Dialog open={true} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          {equipment ? 'Edit Equipment' : 'Add New Equipment'}
+          <IconButton onClick={onClose} size="small"> 
+            <CloseIcon />
+          </IconButton>
+        </Box>
+      </DialogTitle>
 
-        <div className="modal-body">
-          <form onSubmit={handleSubmit}>
-            {error && <div className="alert alert-error">{error}</div>}
+      <DialogContent>
+        <form onSubmit={handleSubmit} id="equipment-form">
+          {error && (
+            <Alert severity="error" sx={{ mb: 2}}>
+              {error}
+            </Alert>
+          )}
 
-            <div className="form-group">
-              <label>Equipment Name *</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                placeholder="e.g., Basketball Kit"
-              />
-            </div>
+          <TextField
+            fullWidth
+            label="Equipment Name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            placeholder="e.g., Football"
+            sx={{ mb: 2 }}
+          />
 
-            <div className="form-group">
-              <label>Category *</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select a category</option>
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Category</InputLabel>
+            <Select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              label="Category"
+              required
+            >
+              {categories.map(cat => (
+                <MenuItem key={cat} value={cat}>{cat}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-            <div className="form-group">
-              <label>Condition *</label>
-              <select
-                name="condition"
-                value={formData.condition}
-                onChange={handleChange}
-                required
-              >
-                <option value="Excellent">Excellent</option>
-                <option value="Good">Good</option>
-                <option value="Fair">Fair</option>
-                <option value="Poor">Poor</option>
-              </select>
-            </div>
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Condition</InputLabel>
+            <Select
+              name="condition"
+              value={formData.condition}
+              onChange={handleChange}
+              label="Condition"
+              required
+            >
+              <MenuItem value="Excellent">Excellent</MenuItem>
+              <MenuItem value="Good">Good</MenuItem>
+              <MenuItem value="Fair">Fair</MenuItem>
+              <MenuItem value="Poor">Poor</MenuItem>
+            </Select>
+          </FormControl>
 
-            <div className="form-group">
-              <label>Total Quantity *</label>
-              <input
-                type="number"
-                name="quantity"
-                value={formData.quantity}
-                onChange={handleChange}
-                min="1"
-                required
-              />
-            </div>
+          <TextField
+            fullWidth
+            label="Total Quantity"
+            name="quantity"
+            type="number"
+            value={formData.quantity}
+            onChange={handleChange}
+            inputProps={{ min: 1 }}
+            required
+            sx={{ mb: 2 }}
+          />
+        </form>
+      </DialogContent>
 
-            <div className="modal-actions">
-              <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>
-                Cancel
-              </button>
-              <button type="submit" className="btn btn-primary" disabled={loading}>
-                {loading ? 'Saving...' : equipment ? 'Update' : 'Add'} Equipment
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+      <DialogActions>
+        <Button onClick={onClose} disabled={loading}>
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          form="equipment-form"
+          variant="contained"
+          disabled={loading}
+          startIcon={loading ? <CircularProgress size={20} /> : null}
+        >
+          {loading ? 'Saving...' : equipment ? 'Update' : 'Add'} Equipment
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }
 
 export default EquipmentForm
-

@@ -2,7 +2,24 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useEquipment } from '../context/EquipmentContext'
 import RequestModal from '../components/RequestModal'
-import './EquipmentList.css'
+import {
+  Container,
+  Typography,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+  Chip,
+  Box,
+  Alert,
+} from '@mui/material'
+import { Search as SearchIcon, Inventory as InventoryIcon } from '@mui/icons-material'
 
 const EquipmentList = () => {
   const { user } = useAuth()
@@ -31,80 +48,103 @@ const EquipmentList = () => {
   }
 
   return (
-    <div className="container">
-      <div className="equipment-header">
-        <h1>Equipment Catalog</h1>
-        <p>Browse and request available equipment</p>
-      </div>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box mb={4}>
+        <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+          Equipment Catalog
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Browse and request available equipment
+        </Typography>
+      </Box>
 
-      <div className="filters card">
-        <div className="filter-group">
-          <label>Search</label>
-          <input
-            type="text"
-            placeholder="Search equipment..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="filter-input"
-          />
-        </div>
-        <div className="filter-group">
-          <label>Category</label>
-          <select
+      <Box mb={4} display="flex" gap={2} flexWrap="wrap">
+        <TextField
+          placeholder="Search equipment..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+          }}
+          sx={{ flexGrow: 1, minWidth: 200 }}
+        />
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel>Category</InputLabel>
+          <Select
             value={categoryFilter}
+            label="Category"
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="filter-input"
           >
             {categories.map(cat => (
-              <option key={cat} value={cat}>
+              <MenuItem key={cat} value={cat}>
                 {cat === 'all' ? 'All Categories' : cat}
-              </option>
+              </MenuItem>
             ))}
-          </select>
-        </div>
-      </div>
+          </Select>
+        </FormControl>
+      </Box>
 
-      <div className="equipment-grid grid grid-3">
-        {filteredEquipment.length === 0 ? (
-          <div className="card empty-state">
-            <p>No equipment found matching your criteria.</p>
-          </div>
-        ) : (
-          filteredEquipment.map(item => (
-            <div key={item.id} className="equipment-card">
-              <div className="equipment-header-card">
-                <h3>{item.name}</h3>
-                <span className={`badge badge-${item.available > 0 ? 'success' : 'danger'}`}>
-                  {item.available > 0 ? 'Available' : 'Unavailable'}
-                </span>
-              </div>
-              <div className="equipment-info">
-                <p className="equipment-category">📁 {item.category}</p>
-                <p className="equipment-description">{item.description}</p>
-                <div className="equipment-details">
-                  <div className="detail-item">
-                    <span className="detail-label">Condition:</span>
-                    <span className="detail-value">{item.condition}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Available:</span>
-                    <span className="detail-value">{item.available} / {item.quantity}</span>
-                  </div>
-                </div>
-              </div>
-              {(user.role === 'student' || user.role === 'staff') && (
-                <button
-                  onClick={() => handleRequest(item)}
-                  disabled={item.available === 0}
-                  className={`btn btn-primary btn-block ${item.available === 0 ? 'btn-disabled' : ''}`}
-                >
-                  {item.available > 0 ? 'Request Equipment' : 'Not Available'}
-                </button>
-              )}
-            </div>
-          ))
-        )}
-      </div>
+      {filteredEquipment.length === 0 ? (
+        <Alert severity="info">No equipment found matching your criteria.</Alert>
+      ) : (
+        <Grid container spacing={3}>
+          {filteredEquipment.map(item => (
+            <Grid item xs={12} sm={6} md={6} key={item.id}>
+              <Card elevation={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column', minWidth: 320}}>
+                <CardContent sx={{ flexGrow: 1}}>
+                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                    <Typography variant="h6" component="h3" fontWeight="bold">
+                      {item.name}
+                    </Typography>
+                    <Chip
+                      label={item.available > 0 ? 'Available' : 'Unavailable'}
+                      color={item.available > 0 ? 'success' : 'error'}
+                      size="small"
+                    />
+                  </Box>
+                  
+                  <Box mb={2}>
+                    <Chip
+                      icon={<InventoryIcon />}
+                      label={item.category}
+                      size="small"
+                      variant="outlined"
+                      sx={{ mb: 1 }}
+                    />
+                    {item.description && (
+                      <Typography variant="body2" color="text.secondary" mt={1}>
+                        {item.description}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  <Box>
+                    <Typography variant="body2" gutterBottom>
+                      <strong>Condition:</strong> {item.condition}
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Available:</strong> {item.available} / {item.quantity}
+                    </Typography>
+                  </Box>
+                </CardContent>
+
+                {(user.role === 'student' || user.role === 'teacher') && (
+                  <CardActions>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={() => handleRequest(item)}
+                      disabled={item.available === 0}
+                    >
+                      {item.available > 0 ? 'Request Equipment' : 'Not Available'}
+                    </Button>
+                  </CardActions>
+                )}
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       {showModal && selectedEquipment && (
         <RequestModal
@@ -115,10 +155,8 @@ const EquipmentList = () => {
           }}
         />
       )}
-    </div>
+    </Container>
   )
 }
 
 export default EquipmentList
-
-

@@ -1,7 +1,22 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useEquipment } from '../context/EquipmentContext'
-import './Modal.css'
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  Typography,
+  Box,
+  Alert,
+  CircularProgress,
+  Chip,
+  Divider,
+} from '@mui/material'
+import { Close as CloseIcon, Inventory as InventoryIcon } from '@mui/icons-material'
+import { IconButton } from '@mui/material'
 
 const RequestModal = ({ equipment, onClose }) => {
   const { user } = useAuth()
@@ -86,73 +101,106 @@ const RequestModal = ({ equipment, onClose }) => {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Request Equipment</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
-        </div>
+    <Dialog open={true} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="h6" fontWeight="bold">
+            Request Equipment
+          </Typography>
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon />
+          </IconButton>
+        </Box>
+      </DialogTitle>
 
-        <div className="modal-body">
-          <div className="equipment-summary">
-            <h3>{equipment.name}</h3>
-            <p className="equipment-category">Category: {equipment.category}</p>
-            <p className="equipment-available">
-              Available: {equipment.available} / {equipment.quantity}
-            </p>
-          </div>
+      <DialogContent>
+        {success ? (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            Request submitted successfully!
+          </Alert>
+        ) : (
+          <>
+            <Box 
+              mb={3} 
+              p={2} 
+              sx={{ 
+                bgcolor: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: 1,
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              }}
+            >
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                {equipment.name}
+              </Typography>
+              <Box display="flex" gap={1} flexWrap="wrap" mt={1}>
+                <Chip
+                  icon={<InventoryIcon />}
+                  label={equipment.category}
+                  size="small"
+                  variant="outlined"
+                />
+                <Chip
+                  label={`Available: ${equipment.available} / ${equipment.quantity}`}
+                  size="small"
+                  color={equipment.available > 0 ? 'success' : 'error'}
+                />
+              </Box>
+            </Box>
 
-          {success ? (
-            <div className="alert alert-success">
-              Request submitted successfully! You will be notified once it's reviewed.
-            </div>
-          ) : (
+            <Divider sx={{ my: 2 }} />
+
             <form onSubmit={handleSubmit}>
-              {error && <div className="alert alert-error">{error}</div>}
+              {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {error}
+                </Alert>
+              )}
 
-              <div className="form-group">
-                <label>Quantity</label>
-                <input
-                  type="number"
-                  name="quantity"
-                  value={formData.quantity}
-                  onChange={handleChange}
-                  min="1"
-                  max={equipment.available}
-                  required
-                />
-                <small className="form-help-text">
-                  Available: {equipment.available} item(s)
-                </small>
-              </div>
+              <TextField
+                fullWidth
+                label="Quantity"
+                name="quantity"
+                type="number"
+                value={formData.quantity}
+                onChange={handleChange}
+                inputProps={{ min: 1, max: equipment.available }}
+                required
+                sx={{ mb: 2 }}
+                helperText={`Available: ${equipment.available} item(s)`}
+              />
 
-              <div className="form-group">
-                <label>Return Date</label>
-                <input
-                  type="date"
-                  name="endDate"
-                  value={formData.endDate}
-                  onChange={handleChange}
-                  min={today}
-                  required
-                />
-              </div>
+              <TextField
+                fullWidth
+                label="Return Date"
+                name="endDate"
+                type="date"
+                value={formData.endDate}
+                onChange={handleChange}
+                InputLabelProps={{ shrink: true }}
+                inputProps={{ min: today }}
+                required
+                sx={{ mb: 2 }}
+              />
 
-              <div className="modal-actions">
-                <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>
+              <DialogActions>
+                <Button onClick={onClose} disabled={loading}>
                   Cancel
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={loading}
+                  startIcon={loading ? <CircularProgress size={20} /> : null}
+                >
                   {loading ? 'Submitting...' : 'Submit Request'}
-                </button>
-              </div>
+                </Button>
+              </DialogActions>
             </form>
-          )}
-        </div>
-      </div>
-    </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }
 
 export default RequestModal
-

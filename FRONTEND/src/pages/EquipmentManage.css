@@ -28,22 +28,22 @@
 }
 
 .equipment-table th {
-  background: #f9fafb;
+  /* Background will be set by Material UI theme */
   padding: 12px;
   text-align: left;
   font-weight: 600;
-  color: #374151;
-  border-bottom: 2px solid #e5e7eb;
+  /* Color will be set by Material UI theme */
+  border-bottom: 2px solid rgba(255, 255, 255, 0.12);
 }
 
 .equipment-table td {
   padding: 16px 12px;
-  border-bottom: 1px solid #e5e7eb;
-  color: #1f2937;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  /* Color will be set by Material UI theme */
 }
 
 .equipment-table tr:hover {
-  background: #f9fafb;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .table-description {

@@ -6,7 +6,9 @@ from datetime import datetime
 from typing import List, Optional
 import models, database, crud, schemas, utils
 
-app = FastAPI()
+app = FastAPI(
+    title="SCHOOL EQUIPMENT LENDING PORTAL"
+)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 def get_db():
@@ -88,6 +90,13 @@ def patch_equipment(equipment_id: int, equipment_update: schemas.EquipmentUpdate
         equipment_id=equipment_id, 
         equipment_update=equipment_update
     )
+
+@app.delete("/equipment/{equipment_id}", response_model=schemas.Equipment)
+def delete_equipment(equipment_id:int, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+    payload = utils.verify_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid/expired token")
+    return crud.delete_equipment(db=db, equipment_id=equipment_id)
 
 @app.patch("/loan_requests/{loan_request_id}", response_model=schemas.LoanRequest)
 def update_loan_request(loan_request_id: int, status_update: schemas.LoanRequestStatusUpdate, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):

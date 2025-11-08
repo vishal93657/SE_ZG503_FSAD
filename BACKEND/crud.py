@@ -77,6 +77,16 @@ def update_equipment(db: Session, equipment_id: int, equipment_update: schemas.E
     db.refresh(db_equipment)
     return db_equipment
 
+def delete_equipment(db: Session, equipment_id: int):
+    db_equipment = db.query(models.Equipment).filter(models.Equipment.id == equipment_id).first()
+    if not db_equipment:
+        raise HTTPException(status_code=404, detail="Equipment not found")
+    if db_equipment.quantity != db_equipment.available_quantity:
+        raise HTTPException(status_code=400, detail="Cannot delete equipment. Some items are still on loan.")
+    db.delete(db_equipment)
+    db.commit()
+    return db_equipment
+
 
 def update_loan_request_status(db: Session, loan_request_id:int, status_update: schemas.LoanRequestStatusUpdate):
     db_loan_request = db.query(models.LoanRequest).filter(models.LoanRequest.id == loan_request_id).first()

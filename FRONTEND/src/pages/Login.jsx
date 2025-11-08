@@ -1,7 +1,17 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import './Auth.css'
+import {
+  Container,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Alert,
+  Box,
+  Link as MuiLink,
+} from '@mui/material'
+import { School as SchoolIcon } from '@mui/icons-material'
 
 const Login = () => {
   const [username, setUsername] = useState('')
@@ -23,46 +33,67 @@ const Login = () => {
   }
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h1>Login</h1>
-        <p className="auth-subtitle">Sign in to your account</p>
+    <Container maxWidth="sm" sx={{ py: 8 }}>
+      <Paper elevation={3} sx={{ p: 4 }}>
+        <Box textAlign="center" mb={3}>
+          <SchoolIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+          <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+            Login
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Sign in to your account
+          </Typography>
+        </Box>
         
-        {error && <div className="alert alert-error">{error}</div>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
         
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Username</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              placeholder="Enter your username"
-            />
-          </div>
+          <TextField
+            fullWidth
+            label="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            placeholder="Enter your username"
+            sx={{ mb: 2 }}
+          />
           
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="Enter your password"
-            />
-          </div>
+          <TextField
+            fullWidth
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            placeholder="Enter your password"
+            sx={{ mb: 3 }}
+          />
           
-          <button type="submit" className="btn btn-primary btn-block">
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            size="large"
+            sx={{ mb: 2 }}
+          >
             Login
-          </button>
+          </Button>
         </form>
         
-        <p className="auth-footer">
-          Don't have an account? <Link to="/signup">Sign up</Link>
-        </p>
-      </div>
-    </div>
+        <Box textAlign="center">
+          <Typography variant="body2" color="text.secondary">
+            Don't have an account?{' '}
+            <MuiLink component={Link} to="/signup" underline="hover">
+              Sign up
+            </MuiLink>
+          </Typography>
+        </Box>
+      </Paper>
+    </Container>
   )
 }
 
