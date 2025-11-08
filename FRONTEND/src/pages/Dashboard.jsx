@@ -29,13 +29,21 @@ const Dashboard = () => {
     }
   }, [user?.username])
 
-  const userRequests = requests.filter(req => req.userId === user?.id)
-  const pendingRequests = userRequests.filter(req => req.status === 'pending')
-  const approvedRequests = userRequests.filter(req => req.status === 'approved')
   const availableEquipment = equipment.filter(eq => eq.available > 0).length
 
   const displayRole = userRole || user?.role || 'N/A'
   const formattedRole = displayRole.replace('_', ' ').toUpperCase()
+  
+  // Check if user is admin or lab_assistant
+  const isAdminOrLabAssistant = displayRole === 'admin' || displayRole === 'lab_assistant' || 
+                                 user?.role === 'admin' || user?.role === 'lab_assistant'
+  
+  // For admins and lab assistants, show all requests. For others, show only their own
+  const userRequests = isAdminOrLabAssistant 
+    ? requests 
+    : requests.filter(req => req.userId === user?.id)
+  const pendingRequests = userRequests.filter(req => req.status === 'pending')
+  const approvedRequests = userRequests.filter(req => req.status === 'approved')
 
   return (
     <div className="container">
@@ -60,12 +68,12 @@ const Dashboard = () => {
         <div className="stat-card">
           <div className="stat-icon">⏳</div>
           <div className="stat-value">{pendingRequests.length}</div>
-          <div className="stat-label">Pending Requests</div>
+          <div className="stat-label">{isAdminOrLabAssistant ? 'Pending Requests' : 'My Pending Requests'}</div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">✓</div>
           <div className="stat-value">{approvedRequests.length}</div>
-          <div className="stat-label">Active Borrows</div>
+          <div className="stat-label">{isAdminOrLabAssistant ? 'Active Borrows' : 'My Active Borrows'}</div>
         </div>
       </div>
 

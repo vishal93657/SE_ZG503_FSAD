@@ -8,7 +8,7 @@ const RequestModal = ({ equipment, onClose }) => {
   const { createRequest, checkAvailability } = useEquipment()
   const [formData, setFormData] = useState({
     endDate: '',
-    purpose: ''
+    quantity: 1
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -36,7 +36,17 @@ const RequestModal = ({ equipment, onClose }) => {
       return
     }
 
-    
+    const quantity = parseInt(formData.quantity, 10)
+    if (!quantity || quantity < 1) {
+      setError('Quantity must be at least 1')
+      return
+    }
+
+    if (quantity > equipment.available) {
+      setError(`Only ${equipment.available} item(s) available. Please request a smaller quantity.`)
+      return
+    }
+
     const today = new Date().toISOString().split('T')[0]
     const isAvailable = checkAvailability(
       equipment.id,
@@ -59,7 +69,7 @@ const RequestModal = ({ equipment, onClose }) => {
         startDate: today,
         endDate: formData.endDate,
         return_date: formData.endDate,
-        purpose: formData.purpose
+        quantity: quantity
       }
 
       await createRequest(request)
@@ -101,6 +111,22 @@ const RequestModal = ({ equipment, onClose }) => {
               {error && <div className="alert alert-error">{error}</div>}
 
               <div className="form-group">
+                <label>Quantity</label>
+                <input
+                  type="number"
+                  name="quantity"
+                  value={formData.quantity}
+                  onChange={handleChange}
+                  min="1"
+                  max={equipment.available}
+                  required
+                />
+                <small className="form-help-text">
+                  Available: {equipment.available} item(s)
+                </small>
+              </div>
+
+              <div className="form-group">
                 <label>Return Date</label>
                 <input
                   type="date"
@@ -111,7 +137,6 @@ const RequestModal = ({ equipment, onClose }) => {
                   required
                 />
               </div>
-
 
               <div className="modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>

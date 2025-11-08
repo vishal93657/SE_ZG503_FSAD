@@ -1,6 +1,6 @@
 from pydantic import BaseModel,EmailStr
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 
 
 class UserBase(BaseModel):
@@ -39,13 +39,25 @@ class Equipment(EquipmentCreate):
     class Config:
         orm_mode = True
 
+class EquipmentUpdate(BaseModel):
+    name: Optional[str] = None
+    category: Optional[str] = None
+    condition: Optional[str] = None
+    quantity: Optional[int] = None
+
 class LoanRequestCreate(BaseModel):
     user_id: int
     return_date: datetime
+    quantity: int
 
 class LoanRequest(LoanRequestCreate):
     id: int
     borrow_date: datetime
+    status: str
+    equipment_id: int
 
     class Config:
         orm_mode = True
+
+class LoanRequestStatusUpdate(BaseModel):
+    status: Literal["accepted","rejected", "returned"]

@@ -1,19 +1,49 @@
+import { useState } from 'react'
 import { useEquipment } from '../context/EquipmentContext'
 import './Requests.css'
 
 const Requests = () => {
   const { requests, updateRequest, equipment } = useEquipment()
+  const [error, setError] = useState('')
+  const [loadingRequestId, setLoadingRequestId] = useState(null)
 
-  const handleApprove = (requestId) => {
-    updateRequest(requestId, { status: 'approved' })
+  const handleApprove = async (requestId) => {
+    try {
+      setError('')
+      setLoadingRequestId(requestId)
+      await updateRequest(requestId, { status: 'approved' })
+    } catch (err) {
+      setError(err.message || 'Failed to approve request')
+      console.error('Error approving request:', err)
+    } finally {
+      setLoadingRequestId(null)
+    }
   }
 
-  const handleReject = (requestId) => {
-    updateRequest(requestId, { status: 'rejected' })
+  const handleReject = async (requestId) => {
+    try {
+      setError('')
+      setLoadingRequestId(requestId)
+      await updateRequest(requestId, { status: 'rejected' })
+    } catch (err) {
+      setError(err.message || 'Failed to reject request')
+      console.error('Error rejecting request:', err)
+    } finally {
+      setLoadingRequestId(null)
+    }
   }
 
-  const handleReturn = (requestId) => {
-    updateRequest(requestId, { status: 'returned' })
+  const handleReturn = async (requestId) => {
+    try {
+      setError('')
+      setLoadingRequestId(requestId)
+      await updateRequest(requestId, { status: 'returned' })
+    } catch (err) {
+      setError(err.message || 'Failed to mark as returned')
+      console.error('Error marking as returned:', err)
+    } finally {
+      setLoadingRequestId(null)
+    }
   }
 
   const getStatusBadge = (status) => {
@@ -27,7 +57,7 @@ const Requests = () => {
   }
 
   const sortedRequests = [...requests].sort((a, b) => 
-    new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+    new Date(b.createdAt || b.borrow_date || 0) - new Date(a.createdAt || a.borrow_date || 0)
   )
 
   const pendingRequests = sortedRequests.filter(req => req.status === 'pending')
@@ -39,6 +69,12 @@ const Requests = () => {
         <h1>Borrowing Requests</h1>
         <p>Review and manage equipment borrowing requests</p>
       </div>
+
+      {error && (
+        <div className="alert alert-error" style={{ marginBottom: '1rem' }}>
+          {error}
+        </div>
+      )}
 
       {requests.length === 0 ? (
         <div className="card empty-state">
@@ -57,7 +93,7 @@ const Requests = () => {
                       <div className="request-card-header">
                         <div>
                           <h3>{equipmentItem?.name || request.equipmentName || 'Unknown Equipment'}</h3>
-                          <p className="request-user">Requested by: {request.userName}</p>
+                          <p className="request-user">Requested by: {request.userName || `User ID: ${request.userId}`}</p>
                         </div>
                         <span className={`badge ${getStatusBadge(request.status)}`}>
                           {request.status}
@@ -70,26 +106,36 @@ const Requests = () => {
                           <span className="detail-value">{equipmentItem?.category || 'N/A'}</span>
                         </div>
                         <div className="detail-row">
+                          <span className="detail-label">Quantity:</span>
+                          <span className="detail-value">{request.quantity || 1}</span>
+                        </div>
+                        <div className="detail-row">
                           <span className="detail-label">Borrow Date:</span>
                           <span className="detail-value">
-                            {new Date(request.startDate).toLocaleDateString()}
+                            {request.startDate || request.borrow_date 
+                              ? new Date(request.startDate || request.borrow_date).toLocaleDateString()
+                              : 'N/A'}
                           </span>
                         </div>
                         <div className="detail-row">
                           <span className="detail-label">Return Date:</span>
                           <span className="detail-value">
-                            {new Date(request.endDate).toLocaleDateString()}
+                            {request.endDate || request.return_date
+                              ? new Date(request.endDate || request.return_date).toLocaleDateString()
+                              : 'N/A'}
                           </span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Purpose:</span>
-                          <span className="detail-value">{request.purpose || 'N/A'}</span>
-                        </div>
-                        {request.createdAt && (
+                        {request.purpose && (
+                          <div className="detail-row">
+                            <span className="detail-label">Purpose:</span>
+                            <span className="detail-value">{request.purpose}</span>
+                          </div>
+                        )}
+                        {(request.createdAt || request.borrow_date) && (
                           <div className="detail-row">
                             <span className="detail-label">Requested:</span>
                             <span className="detail-value">
-                              {new Date(request.createdAt).toLocaleString()}
+                              {new Date(request.createdAt || request.borrow_date).toLocaleString()}
                             </span>
                           </div>
                         )}
@@ -99,14 +145,16 @@ const Requests = () => {
                         <button
                           className="btn btn-success"
                           onClick={() => handleApprove(request.id)}
+                          disabled={loadingRequestId === request.id}
                         >
-                          Approve
+                          {loadingRequestId === request.id ? 'Processing...' : 'Approve'}
                         </button>
                         <button
                           className="btn btn-danger"
                           onClick={() => handleReject(request.id)}
+                          disabled={loadingRequestId === request.id}
                         >
-                          Reject
+                          {loadingRequestId === request.id ? 'Processing...' : 'Reject'}
                         </button>
                       </div>
                     </div>
@@ -127,7 +175,7 @@ const Requests = () => {
                       <div className="request-card-header">
                         <div>
                           <h3>{equipmentItem?.name || request.equipmentName || 'Unknown Equipment'}</h3>
-                          <p className="request-user">Requested by: {request.userName}</p>
+                          <p className="request-user">Requested by: {request.userName || `User ID: ${request.userId}`}</p>
                         </div>
                         <span className={`badge ${getStatusBadge(request.status)}`}>
                           {request.status}
@@ -140,21 +188,31 @@ const Requests = () => {
                           <span className="detail-value">{equipmentItem?.category || 'N/A'}</span>
                         </div>
                         <div className="detail-row">
+                          <span className="detail-label">Quantity:</span>
+                          <span className="detail-value">{request.quantity || 1}</span>
+                        </div>
+                        <div className="detail-row">
                           <span className="detail-label">Borrow Date:</span>
                           <span className="detail-value">
-                            {new Date(request.startDate).toLocaleDateString()}
+                            {request.startDate || request.borrow_date 
+                              ? new Date(request.startDate || request.borrow_date).toLocaleDateString()
+                              : 'N/A'}
                           </span>
                         </div>
                         <div className="detail-row">
                           <span className="detail-label">Return Date:</span>
                           <span className="detail-value">
-                            {new Date(request.endDate).toLocaleDateString()}
+                            {request.endDate || request.return_date
+                              ? new Date(request.endDate || request.return_date).toLocaleDateString()
+                              : 'N/A'}
                           </span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Purpose:</span>
-                          <span className="detail-value">{request.purpose || 'N/A'}</span>
-                        </div>
+                        {request.purpose && (
+                          <div className="detail-row">
+                            <span className="detail-label">Purpose:</span>
+                            <span className="detail-value">{request.purpose}</span>
+                          </div>
+                        )}
                       </div>
 
                       {request.status === 'approved' && (
@@ -162,8 +220,9 @@ const Requests = () => {
                           <button
                             className="btn btn-primary"
                             onClick={() => handleReturn(request.id)}
+                            disabled={loadingRequestId === request.id}
                           >
-                            Mark as Returned
+                            {loadingRequestId === request.id ? 'Processing...' : 'Mark as Returned'}
                           </button>
                         </div>
                       )}

@@ -76,8 +76,27 @@ def borrow_equipment(equipment_id: int, loan_request: schemas.LoanRequestCreate,
     username = payload.get("sub")
     db_user = crud.get_user_by_username(db, username)
     user_id = db_user.id
-    return crud.borrow_equipment(db=db, equipment_id=equipment_id, user_id=user_id, return_date=loan_request.return_date)
+    return crud.borrow_equipment(db=db, equipment_id=equipment_id, user_id=user_id, return_date=loan_request.return_date,  quantity=loan_request.quantity )
 
-@app.get("/loan_requests/", response_model=List[schemas.LoanRequest])
+@app.patch("/equipment/{equipment_id}", response_model=schemas.Equipment)
+def patch_equipment(equipment_id: int, equipment_update: schemas.EquipmentUpdate, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+    payload = utils.verify_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid/expired token")
+    return crud.update_equipment(
+        db=db, 
+        equipment_id=equipment_id, 
+        equipment_update=equipment_update
+    )
+
+@app.patch("/loan_requests/{loan_request_id}", response_model=schemas.LoanRequest)
+def update_loan_request(loan_request_id: int, status_update: schemas.LoanRequestStatusUpdate, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+    payload = utils.verify_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid/expired token")
+
+    return crud.update_loan_request_status(db=db, loan_request_id=loan_request_id, status_update=status_update)
+
+@app.get("/loan_requests", response_model=List[schemas.LoanRequest])
 def get_loan_requests(db: Session = Depends(get_db)):
     return crud.get_loan_requests(db=db)

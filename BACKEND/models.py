@@ -32,6 +32,7 @@ class LoanRequest(Base):
     status = Column(String, default="pending")
     borrow_date = Column(DateTime)
     return_date = Column(DateTime)
+    quantity = Column(Integer) 
 
     user = relationship("User", back_populates="loan_requests")
     equipment = relationship("Equipment", back_populates="loan_requests")

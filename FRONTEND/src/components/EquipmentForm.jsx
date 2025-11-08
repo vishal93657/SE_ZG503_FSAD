@@ -60,7 +60,7 @@ const EquipmentForm = ({ equipment, onClose }) => {
       if (equipment) {
         const currentAvailable = equipment.available || 0
         const newAvailable = Math.max(0, Math.min(currentAvailable, formData.quantity))
-        updateEquipment(equipment.id, {
+        await updateEquipment(equipment.id, {
           ...formData,
           available: newAvailable
         })
