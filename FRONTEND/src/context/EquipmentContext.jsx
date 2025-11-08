@@ -111,17 +111,39 @@ export const EquipmentProvider = ({ children }) => {
     localStorage.setItem('equipment', JSON.stringify(updated))
   }
 
-  const createRequest = (request) => {
-    const newRequest = {
-      ...request,
-      id: Date.now(),
-      status: 'pending',
-      createdAt: new Date().toISOString()
+  const createRequest = async (request) => {
+    try {
+      const payload = {
+        user_id: request.userId,
+        return_date: request.endDate || request.return_date
+      }
+
+      const response = await api.post(`/borrow/${request.equipmentId}`, payload)
+      
+      const newRequest = {
+        ...request,
+        id: response.data.id || Date.now(),
+        status: response.data.status || 'pending',
+        createdAt: response.data.created_at || new Date().toISOString()
+      }
+      
+      const updated = [...requests, newRequest]
+      setRequests(updated)
+      localStorage.setItem('requests', JSON.stringify(updated))
+      
+      // Refresh equipment list to update availability
+      await fetchEquipment()
+      
+      return newRequest
+    } catch (err) {
+      console.error('Error creating request:', err)
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error || 
+                          err.response?.data?.detail ||
+                          err.message || 
+                          'Failed to create request'
+      throw new Error(errorMessage)
     }
-    const updated = [...requests, newRequest]
-    setRequests(updated)
-    localStorage.setItem('requests', JSON.stringify(updated))
-    return newRequest
   }
 
   const updateRequest = (id, updates) => {
