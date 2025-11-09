@@ -9,4 +9,8 @@ engine = create_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():
+    """
+    Initializes the database by creating all defined tables
+    based on the SQLAlchemy Base metadata.
+    """
     Base.metadata.create_all(bind=engine)

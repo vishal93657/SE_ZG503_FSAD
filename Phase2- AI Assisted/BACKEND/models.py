@@ -5,6 +5,9 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 class User(Base):
+    """
+    SQLAlchemy model representing a user in the system.
+    """
     __tablename__ = 'users'
     
     id = Column(Integer, primary_key=True, index=True)
@@ -14,6 +17,9 @@ class User(Base):
     role = Column(String, default="Student")
 
 class Equipment(Base):
+    """
+    SQLAlchemy model representing an equipment item available for lending.
+    """
     __tablename__ = 'equipment'
 
     id = Column(Integer, primary_key=True, index=True)
@@ -24,6 +30,9 @@ class Equipment(Base):
     available_quantity = Column(Integer, nullable=True)
 
 class LoanRequest(Base):
+    """
+    SQLAlchemy model representing a request or ongoing loan of an equipment item.
+    """
     __tablename__ = 'loan_requests'
 
     id = Column(Integer, primary_key=True, index=True)

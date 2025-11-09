@@ -64,7 +64,7 @@ const Dashboard = () => {
   const approvedRequests = userRequests.filter(req => req.status === 'approved')
 
   const StatCard = ({ icon: Icon, value, label, color = 'primary' }) => (
-    <Card elevation={2} sx={{ height: '100%' }}>
+    <Card elevation={4} sx={{ height: '100%', borderLeft: `5px solid ${color}.main`}}>
       <CardContent>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Box>

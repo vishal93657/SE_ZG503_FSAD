@@ -2,29 +2,36 @@ import { useState } from 'react'
 import { useEquipment } from '../context/EquipmentContext'
 import EquipmentForm from '../components/EquipmentForm'
 import './EquipmentManage.css'
+import { Alert, Box} from '@mui/material'
 
 const EquipmentManage = () => {
   const { equipment, deleteEquipment } = useEquipment()
   const [editingItem, setEditingItem] = useState(null)
   const [showForm, setShowForm] = useState(false)
+  const [error, setError] = useState(null)
 
   const handleEdit = (item) => {
+    setError(null)
     setEditingItem(item)
     setShowForm(true)
   }
 
   const handleDelete = async(id) => {
+    setError(null)
     try {
       await deleteEquipment(id)
     } catch (error) {
-      console.error('VISHAL', error);
-      alert('Failed to delete equipment:', `${error.detail}`)
+      console.log('VISHAL', error)
+      const errorMessage = error.message || error.detail || String(error)
+      setError(`Failed to delete equipment: ${errorMessage}`)
+      console.error('Delete error:', error)
     }
   }
 
   const handleFormClose = () => {
     setShowForm(false)
     setEditingItem(null)
+    setError(null)
   }
 
   return (
@@ -41,6 +48,16 @@ const EquipmentManage = () => {
           + Add New Equipment
         </button>
       </div>
+      {error && (
+        <Box sx={{ my: 2 }}>
+          <Alert 
+            severity="error" 
+            onClose={() => setError(null)}
+          >
+            {error}
+          </Alert>
+        </Box>
+      )}
 
       {showForm && (
         <EquipmentForm
